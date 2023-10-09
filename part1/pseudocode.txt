@@ -1,8 +1,8 @@
 Define the Problem
-The goal of this assignment is to remove all of the duplicate PCR from a SAM file. The SAM file will initially have to be sorted before creating functions to remove the duplicates. The program would need to handle soft clippings, strandedness, single mapped reads and UMI’s. The program should create an output file that contains all of the UMI’s, an output file for the first read encountered if there are duplicate files and a properly formatted SAM file.
-
-Link to SAM input file:
-Link to SAM expected file:
+The goal of this assignment is to remove all of the duplicate PCR from a SAM file. The SAM file will initially have to be sorted before creating 
+functions to remove the duplicates. The program would need to handle soft clippings, strandedness, single mapped reads and UMI’s. The program 
+should create an output file that contains all of the UMI’s, an output file for the first read encountered if there are duplicate files and a 
+properly formatted SAM file.
 
 
 Pseudocode:
