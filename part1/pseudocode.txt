@@ -1,5 +1,8 @@
 Define the Problem
-The goal of this assignment is to remove all of the duplicate PCR from a SAM file. The SAM file will initially have to be sorted before creating functions to remove the duplicates. The program would need to handle soft clippings, strandedness, single mapped reads and UMI’s. The program should create an output file that contains all of the UMI’s, an output file for the first read encountered if there are duplicate files and a properly formatted SAM file.
+The goal of this assignment is to remove all of the duplicate PCR from a SAM file. The SAM file will initially have to be sorted before creating 
+functions to remove the duplicates. The program would need to handle soft clippings, strandedness, single mapped reads and UMI’s. The program 
+should create an output file that contains all of the UMI’s, an output file for the first read encountered if there are duplicate files and a 
+properly formatted SAM file.
 
 
 Pseudocode:
@@ -31,7 +34,7 @@ Return entries
 Else:
 	discard
 
-	
+
 Def soft_clipping(cigar_string, position):
 ```this function looks at the cigar string and updates the position based on that```
 Look at the cigar string to see if there is an M, N or S and look at the position(col 4)
