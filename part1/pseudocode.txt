@@ -1,8 +1,5 @@
 Define the Problem
-The goal of this assignment is to remove all of the duplicate PCR from a SAM file. The SAM file will initially have to be sorted before creating 
-functions to remove the duplicates. The program would need to handle soft clippings, strandedness, single mapped reads and UMI’s. The program 
-should create an output file that contains all of the UMI’s, an output file for the first read encountered if there are duplicate files and a 
-properly formatted SAM file.
+The goal of this assignment is to remove all of the duplicate PCR from a SAM file. The SAM file will initially have to be sorted before creating functions to remove the duplicates. The program would need to handle soft clippings, strandedness, single mapped reads and UMI’s. The program should create an output file that contains all of the UMI’s, an output file for the first read encountered if there are duplicate files and a properly formatted SAM file.
 
 
 Pseudocode:
@@ -15,57 +12,47 @@ Output UMI file
 Output first duplicate file
 Output SAM file
 
-Def read_file(filename):
-```This is a function to read in the sam file and return a list of all of the lines in the file’
-Open the file to read
-Remove the header lines (ones that start with @)
-Store the rest of the lines into a 2d list
-Return the list
-
-Def check_strandedness(sam_list):
-``this is a function to check the strandedness of all of the entries in a sam file```
-Loop through the sam_list:
-	Check if the bitwise flag in the second column is 16:
-		Write the lines that match to list
-Return sam_strand_list
-
-Def check_duplicate(sam_strand_list):
-```This function loops through the lines in a sam file and finds all of the duplicates and stores them in a dictionary```
-Loop through the sam file list
-	Compare the values of the 2nd, 3rd and 4th positions 2 lines at a time,
-	If they match:
-		Write the first line to a file
-		Write those lines to a dictionary
-Return the duplicate_dict
-Example = {1: [read7:ACGACTTG	87	4	76730180	36	40M10S	*	0	0	GCCTTTCCGTTCCACCAGATAG	MD:Z:71	NH:i:1	HI:i:1	NM:i:0	,
-              read8:ATCGTTGG	87	4	76730180	36	50M5S	*	0	0	CTCTGAGGTGGTTCCAGTAACA	MD:Z:71	NH:i:1	HI:i:1	]}
-
-
-
-Def soft_clipping(duplicate_dict):
-	For each entry in the dictionary:
-		Look at the cigar string to see if there is an M, N or S and look at the position(col 4)
-		Get new position by updating position index in the dictionary
-Return updated dictionary
-Eg: 	position - 125, CIGAR string - 10M3S
-New position: position - 3 = 122
-
-
 Def store_umi(umi_file):
 ```this function will open the umi file and store all of the data into a dictionary```
 
-Def store_umi(umi_dictionary, sam_list):
+Def compare_umi(umi_dictionary, qname):
 ```this function checks for known UMI’s and writes them into a file```
-Loop through umi dictionary and sam_list with removed duplicates:
-	If the umis match:
-		Write to file
+Loop through umi dictionary:
+	If the umis match and the exist:
+		Return the entry
 	Else:
 		discard
 
+
+Def check_strandedness(flag):
+``this function takes in the flag as an argument to check the strandedness of the entries we are looking at```
+Check if the bitwise flag in the second column is 16:
+Return entries 
+Else:
+	discard
+
+	
+Def soft_clipping(cigar_string, position):
+```this function looks at the cigar string and updates the position based on that```
+Look at the cigar string to see if there is an M, N or S and look at the position(col 4)
+	Get new position fron the string
+	Update position index in the dictionary
+Return new_positions
+Eg: 	position - 125, CIGAR string - 10M3S
+New position: position - 3 = 122
+
+Def check_duplicate(sma_line1, sam_line2,position,strandedness,cigarstring):
+```This function looks at 2 lines in the sam file at a time. If they are duplicates, it writes the first occurrence into a file and discards the rest ```
+Compare the values of the 2nd, 3rd and 4th positions 2 lines at a time,
+If they match:
+	Write the first line to a file
+Return the duplicate
+Example = {1: [read7:ACGACTTG	87	4	76730180	36	40M10S	*	0	0	GCCTTTCCGTTCCACCAGATAG	MD:Z:71	NH:i:1	HI:i:1	NM:i:0	,
+read8:ATCGTTGG	87	4	76730180	36	50M5S	*	0	0	CTCTGAGGTGGTTCCAGTAACATT	MD:Z:71	NH:i:1	HI:i:1	NM:i:0	SM:i:36	]}
+
+
 Def main():
 ```this is the main function where I will call of the functions above and make the interact```
-
-	
-
-	
-
+Open the sam file here reading two lines at a time
+Storing needed fields: position, flag, strand and qname
+Call the functions above to write to file
