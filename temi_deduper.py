@@ -61,7 +61,7 @@ def adjust_position(position, cigar, strand):
     if strand == False:
         for count, group in cigar:
             if cigar[0][1] =='S':
-                new_position = position - int(count)
+                new_position = int(position) - int(count)
                 return new_position
             else:
                 return position
@@ -77,7 +77,8 @@ def adjust_position(position, cigar, strand):
                 #print('working?')
                 new_p += count
         #print(f'new count {new_p}')
-        return position + new_p
+        adjusted_pos =  int(position) + new_p
+        return asjusted_pos
     
 
            
