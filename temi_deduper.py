@@ -233,8 +233,9 @@ def main():
                     sam_out.write(f'{sam_line1}\n')
                 if chromosome!= prev_chrom:
                     #dup_dict={}
-                    dup_dict.clear()
                     prev_chrom=chromosome
+                    dup_dict.clear()
+                    
                 #print(dup_dict)
                 # chrom_check = True
                 # if chrom_check:
