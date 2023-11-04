@@ -61,7 +61,7 @@ def adjust_position(position, cigar, strand):
     if strand == False:
         for count, group in cigar:
             if cigar[0][1] =='S':
-                new_position = int(position) - int(count)
+                new_position = position - int(count)
                 return new_position
             else:
                 return position
@@ -77,8 +77,8 @@ def adjust_position(position, cigar, strand):
                 #print('working?')
                 new_p += count
         #print(f'new count {new_p}')
-        adjusted_pos =  int(position) + new_p
-        return asjusted_pos
+        adjusted_pos = position + new_p
+        return adjusted_pos
     
 
            
@@ -173,104 +173,72 @@ def adjust_position(position, cigar, strand):
 #         print(unknown_umis)
 def main():
     '''main function to organize workflow'''
-    #umis = store_umi(umi_file)
+    umi_set = store_umi(umi_file)
     # print(umis)
     #creating dictionar to compare duplicates
     duplicate = 0
     record =0
     unknown_umis = 0
-    #dup_dict={}
-    dup_dict=set()
+    dup_dict={}
+    #dup_dict=set()
     prev_chrom =None
     with open(sam_file, 'r') as sam, open(sam_output, 'w') as sam_out:
         while True:
             sam_line1 = sam.readline().strip()
-            #sam_line2 = sam.readline().strip()
 
             if sam_line1 == "" :
                 break
-            #print(sam_line1)
-            #check if the line is a header line and write to output file
-            # if sam_line1.startswith('@'):
-            #     sam_out.write(f'{sam_line1}\n')
             if sam_line1.startswith('@') :
                 sam_out.write(f'{sam_line1}\n')
-                #sam_out.write(f'{sam_line2}\n')
+                
             else: #else it is not a header line so we can turn the lines into a list and get the columns we need
                 
                 line =sam_line1.split()
-                #print(sam_line1[3])
+                
             #get the columns we need for more analysis
                 line1_qname = line[0]
-                line1_flag = line[1]
                 chromosome = line[2]
-                line1_position = line[3]
+                if chromosome!= prev_chrom:
+                    prev_chrom=chromosome
+                    dup_dict.clear()
                 
-                
-                #getting the correct known Umis
-                #line1_umi = check_umi(umis, line1_qname)
-                umi_set = store_umi(umi_file)
+                #getting umi information      
+                #umi_set = store_umi(umi_file)
                 umi = line1_qname.split(':')[7]
                 umi = umi.split()[0]
                 if umi in umi_set:
-                    umi_exist = umi
+                    umi_exist = umi    
+                    line1_position = line[3]
+                    
+                    flag = line[1]
+                #getting the correct known Umis
+          
+                    line1_cigar = line[5]
+                    strand = check_strandedness(flag)
+                    #getting the accurate position
+                    position = adjust_position(int(line1_position), line1_cigar, strand)
+                    
+                    #duplicate_tuple = (chromosome, umi_exist, strand, position)
+                    duplicate_tuple = (umi_exist, strand, position)
+                    if duplicate_tuple in dup_dict:
+                        duplicate +=1
+                        dup_dict[duplicate_tuple]+=1
+                        #continue
+                    else:
+                        sam_out.write(f'{sam_line1}\n')
+                        #dup_dict.add(duplicate_tuple)
+                        dup_dict[duplicate_tuple]=1
+                        record +=1
                 else:
                     unknown_umis+=1
-                    continue
-                     #print(f'position class {type(line1_position)}')
-                line1_cigar = line[5]
-                strand = check_strandedness(line1_flag)
-                #getting the accurate position
-                position = adjust_position(line1_position, line1_cigar, strand)
-                #position = adjust_position(line1_position,line1_flag, line1_cigar)
-                #create a tuple that stores all of the duplicate information
-                duplicate_tuple = (chromosome, umi_exist, strand, position)
-                if duplicate_tuple in dup_dict:
-                    duplicate +=1
-                    continue
-                else:
-                    record +=1
-                    dup_dict.add(duplicate_tuple)
-                    sam_out.write(f'{sam_line1}\n')
-                if chromosome!= prev_chrom:
-                    #dup_dict={}
-                    prev_chrom=chromosome
-                    dup_dict.clear()
-                    
-                #print(dup_dict)
-                # chrom_check = True
-                # if chrom_check:
-                #     if duplicate_tuple not in dup_dict:
-                #         print('first entry')
-                #         sam_out.write(f'{sam_line1}\n')
-                #         dup_dict[duplicate_tuple]=0
-                #         #print(f'first {dup_dict}')
-                #         record +=1
-                #         chrom_check=False
-                #         continue
-                # #else:
-                #     if duplicate_tuple[0] == chromosome:
-                #         if duplicate_tuple not in dup_dict:
-                #             sam_out.write(f'{sam_line1}\n')
-                #             dup_dict[duplicate_tuple] =1
-                #             record +=1
-                #             #print(dup_dict)
-                #         else:
-                #             #print('duplicate here')
-                #             dup_dict[duplicate_tuple] +=1
-                #             # duplicate+=1
-                #             # record+=1
-                #             dupfile.write(f'{sam_line1}\n')
-                #     else:
-                #         duplicate +=1
-                #         record+=1
-                #         dup_dict = {}    
-                #getting the correct strand
-                #the dictionary is empty so we just assume that that the chromosomes match               
-        print(f'duplicate: {duplicate}')
-        print(record)
-        print(unknown_umis)
-
+                    record+=1
+                    #continue
+                
+    with open('summary.txt', 'w')as summary:   
+        summary.write(f'duplicate: {duplicate}\n')
+        summary.write(f'Number of reads: {record}\n')
+        summary.write(f'Unknown UMIs: {unknown_umis}\n')
+        summary.write(f'{chromosome} : {len(dup_dict)}\n')  
 
 if __name__ == "__main__":
     main()
