@@ -25,6 +25,7 @@ def store_umi(umi_file):
             umi_set.add(line.strip())
     return umi_set
 
+
 #we dont care about reveerse complemented umis
 # def check_umi(umi_set, qname):
 #     '''This function checks if umi in qname is in umi_set, write unknowns into file and returns the known Umi'''
@@ -43,14 +44,17 @@ def store_umi(umi_file):
 
 def check_strandedness(flag):
     '''this function returns a bool based on if the sequence is reversed or not'''
-    flag:int =0
+    #flag:int =0
     if((flag & 16) == 16):
         #yes reverse complemented on the '-'strand
         return True
     else:
         # + PLUS strand
         return False
-    
+# print(check_strandedness(16))
+# print(check_strandedness(0))
+# print(check_strandedness(12))
+
 def adjust_position(position, cigar, strand):
     '''this function uses the cigar string to adjust the position based on strandedness'''
     #new_position =0
@@ -73,7 +77,8 @@ def adjust_position(position, cigar, strand):
             if first_group and cigar[0][1] == 'S':
                 first_group=False
                 continue
-            if group != 'I':
+            if group =='M' or group =='D' or group =='S'or group =='N':
+            #if group != 'I':
                 #print('working?')
                 new_p += count
         #print(f'new count {new_p}')
@@ -81,7 +86,7 @@ def adjust_position(position, cigar, strand):
         return adjusted_pos
     
 
-           
+#print(adjust_position(76710746, '71M', True))        
 
 #Dictionary, then check againt the dictionary to see if it is a duplicate
     #key: tuple(chrom, 5' start, strand, umi)
@@ -171,6 +176,8 @@ def adjust_position(position, cigar, strand):
 #         print(duplicate)
 #         print(record)
 #         print(unknown_umis)
+
+#REAL MAIN-----------------------------------------------------------------------------------------
 def main():
     '''main function to organize workflow'''
     umi_set = store_umi(umi_file)
@@ -180,6 +187,7 @@ def main():
     record =0
     unknown_umis = 0
     dup_dict={}
+    chrom_count={}
     #dup_dict=set()
     prev_chrom =None
     with open(sam_file, 'r') as sam, open(sam_output, 'w') as sam_out:
@@ -214,10 +222,10 @@ def main():
                 #getting the correct known Umis
           
                     line1_cigar = line[5]
-                    strand = check_strandedness(flag)
+                    strand = check_strandedness(int(flag))
                     #getting the accurate position
                     position = adjust_position(int(line1_position), line1_cigar, strand)
-                    
+                    #print(adjust_position(int(line1_position), line1_cigar, strand))
                     #duplicate_tuple = (chromosome, umi_exist, strand, position)
                     duplicate_tuple = (umi_exist, strand, position)
                     if duplicate_tuple in dup_dict:
@@ -226,9 +234,14 @@ def main():
                         #continue
                     else:
                         sam_out.write(f'{sam_line1}\n')
+                        #if chromosome not in dictionary add it to the dictionary
                         #dup_dict.add(duplicate_tuple)
                         dup_dict[duplicate_tuple]=1
                         record +=1
+                        if not chrom_count.get(prev_chrom):
+                            chrom_count[prev_chrom] =1
+                        else:
+                            chrom_count[prev_chrom]+=1
                 else:
                     unknown_umis+=1
                     record+=1
@@ -238,7 +251,12 @@ def main():
         summary.write(f'duplicate: {duplicate}\n')
         summary.write(f'Number of reads: {record}\n')
         summary.write(f'Unknown UMIs: {unknown_umis}\n')
-        summary.write(f'{chromosome} : {len(dup_dict)}\n')  
+        
+        for chrom, count in chrom_count.items():
+            summary.write(f'{chrom} : {count}\n')
+#------------------------------------------------------------------------------------------------------
+
+
 
 if __name__ == "__main__":
     main()
